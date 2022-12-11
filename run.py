@@ -22,6 +22,6 @@ def pipeline(model, train, test):
 
 if __name__ == "__main__":
     train, test, labels = prepare_dataset("./iris.csv", do_normalize=True)
-    pipeline(ForwardForwardClassifier(in_dim=4, hide_dim=200, out_dim=2), train, test)
-    pipeline(MLPBinaryClassifier(in_dim=4, hide_dim=200), train, test)
+    pipeline(ForwardForwardClassifier(in_dim=4, hide_dim=100, out_dim=2), train, test)
+    pipeline(MLPBinaryClassifier(in_dim=4, hide_dim=100), train, test)
         
