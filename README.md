@@ -1,4 +1,4 @@
-# Forward Forward Netowork
+# Forward Forward Network
 #### Quick Start
 
 __Requirement:__ Numpy, pytorch (for the baseline model)
