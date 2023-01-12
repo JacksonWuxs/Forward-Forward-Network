@@ -38,7 +38,7 @@ class FullyConnected:
                hidden vector before using it as input to the
                next layer.``
         """
-        return X / (1e-9 + (X ** 2).sum(axis=-1, keepdims=True))
+        return X / (1e-9 + (X ** 2).sum(axis=-1, keepdims=True) ** 0.5)
 
     def _goodness(self, H):
         """compute the goodness score.
