@@ -39,9 +39,7 @@ predY = model.predict(testX)
 evaluate(testY, predY)
 ```
 
-__Setting: __ BatchSize=32, LearnRate=0.001, epochs=1000，constant theta=0.0.
-
-__Note:__ I found that the model is very sensitive to different hyper-parameters (learn_rate, batch_size, hide_dim). 
+__Setting:__ BatchSize=8, LearnRate=5e-4, epochs=10000，constant theta=1.0.
 
 __Warning:__ The code right now is based on my PERSONAL understanding to the paper, so it may have some mistake!!!!!
 
@@ -49,4 +47,4 @@ __Warning:__ The code right now is based on my PERSONAL understanding to the pap
 
 Paper: Hinton, Geoffrey. "[The Forward-Forward Algorithm: Some Preliminary Investigations]([FFA13.pdf (toronto.edu)](https://www.cs.toronto.edu/~hinton/FFA13.pdf))."
 
-Related Repo: [forward-forward/forward-forward.ipynb at main · Trel725/forward-forward (github.com)](https://github.com/Trel725/forward-forward/blob/main/forward-forward.ipynb).
+Related Repos: https://github.com/Trel725/forward-forward and https://github.com/mohammadpz/pytorch_forward_forward.
