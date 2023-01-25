@@ -1,17 +1,18 @@
 import random
 import numpy as np
+from numpy.typing import NDArray
 
 
 def sigmoid(x):
     return 1.0 / (1.0 + np.exp(-x))
 
-def norm(x, p=2, dim=-1, keepdims=True):
+def norm(x: NDArray, p: int = 2, dim: int = -1, keepdims: bool = True):
     return (x ** p).sum(axis=dim, keepdims=keepdims)
 
 
 class FullyConnected:
     
-    def __init__(self, in_dim, out_dim, do_norm=True, constant=1.0):
+    def __init__(self, in_dim: int, out_dim: int, do_norm: bool = True, constant: float = 1.0):
         k = np.sqrt(1.0 / in_dim)
         self._W = np.random.uniform(-k, k, (in_dim, out_dim))
         self._b = np.random.uniform(-k, k, out_dim)
@@ -27,14 +28,15 @@ class FullyConnected:
 
     @training.setter
     def training(self, mode):
-        assert mode in (True, False)
+        assert isinstance(mode, bool)
         self._is_training = mode
 
     def __call__(self, X):
         return self.forward(X)
 
     def _normalize(self, X):
-        """normalize the inputs from previous layers
+        """
+        normalize the inputs from previous layers
         Math: X / ||X||_2
         Ref: ``To prevent this, FF normalizes the length of the
                hidden vector before using it as input to the
@@ -43,7 +45,8 @@ class FullyConnected:
         return X / (1e-9 + norm(X, keepdims=True) ** 0.5)
 
     def goodness(self, H):
-        """compute the goodness score.
+        """
+        compute the goodness score.
         Math: \sum_{d=1}^D H_d
         Ref: ``Let us suppose that the goodness function for a layer
                is simply the sum of the squares of the activities of
@@ -55,10 +58,10 @@ class FullyConnected:
         if self.training:
             self._samples += x.shape[0]
             y = sigmoid(self.goodness(h) - self._c)
-            grady = y * (1 - y)
-            gradh = 2 * grady.reshape(-1, 1) * h
-            self._gradW += x.T @ gradh       # (indim, outdim)
-            self._gradb += gradh.sum(axis=0) # (outdim,)
+            grad_y = y * (1 - y)
+            grad_h = 2 * grad_y.reshape(-1, 1) * h
+            self._gradW += x.T @ grad_h        # (indim, outdim)
+            self._gradb += grad_h.sum(axis=0)  # (outdim,)
 
     def _transform(self, X):
         assert X.shape[-1] == self._W.shape[0]
@@ -71,11 +74,11 @@ class FullyConnected:
         self._backward(X, h)
         return h
 
-    def update(self, positive, learn_rate):
-        assert positive in (True, False)
-        sign = 1.0 if positive else -1.0
-        self._W += sign * learn_rate * self._gradW / self._samples
-        self._b += sign * learn_rate * self._gradb / self._samples
+    def update(self, is_positive: bool, learning_rate: float):
+        assert isinstance(is_positive, bool)
+        sign = 1.0 if is_positive else -1.0
+        self._W += sign * learning_rate * self._gradW / self._samples
+        self._b += sign * learning_rate * self._gradb / self._samples
         self._gradW, self._gradb, self._samples = 0.0, 0.0, 0.0
         
 
@@ -83,7 +86,7 @@ class ForwardForwardClassifier:
     
     name = "ForwardForwardNetwork"
     
-    def __init__(self, in_dim, hide_dim, out_dim, n_layers=2):
+    def __init__(self, in_dim: int, hide_dim: int, out_dim: int, n_layers: int = 2):
         assert n_layers >= 1
         self._dims = (in_dim, hide_dim, out_dim)
         self.layers = [FullyConnected(in_dim + out_dim, hide_dim, False)]
@@ -95,18 +98,18 @@ class ForwardForwardClassifier:
             X = layer(X)
         return layer.goodness(X)
 
-    def train_step(self, positive, negative, learn_rate, niters=5):
+    def train_step(self, positive, negative, learning_rate: float, n_iters=5):
         for layer in self.layers:
-            for niter in range(niters):
+            for niter in range(n_iters):
                 layer(positive)
-                layer.update(positive=True, learn_rate=learn_rate)
+                layer.update(is_positive=True, learning_rate=learning_rate)
                 layer(negative)
-                layer.update(positive=False, learn_rate=learn_rate)
+                layer.update(is_positive=False, learning_rate=learning_rate)
             positive = layer(positive)
             negative = layer(negative)
 
-    def fit(self, X, Y, learn_rate=5e-4, batch_size=32, epochs=10000, log_freq=1000):
-        import time
+    def fit(self, X, Y, learn_rate: float = 5e-4, batch_size: int = 32, epochs: int = 10000, log_freq: int = 1000):
+        from time import time
         from sklearn.metrics import accuracy_score
         Y = Y.astype(np.int32)
         self._labels = ylist = set(Y.tolist())
@@ -114,7 +117,7 @@ class ForwardForwardClassifier:
         assert all((isinstance(y, int) for y in ylist)), "labels should be integers"
         assert all((0 <= y < self._dims[-1] for y in ylist)), "labels should fall between 0 and %d" % (self._dims[-1],)
 
-        begin = time.time()
+        begin = time()
         for epoch in range(epochs):
             self.training = True
             for y in ylist:
@@ -133,10 +136,10 @@ class ForwardForwardClassifier:
             Yhat = self.predict(X, batch_size)
             if epoch % log_freq == 0:
                 acc = accuracy_score(Y, Yhat)
-                print("Epoch-%d | Spent=%.4f | Train Accuracy=%.4f" % (epoch, time.time() - begin, acc))
-                begin = time.time()
+                print("Epoch-%d | Spent=%.4f | Train Accuracy=%.4f" % (epoch, time() - begin, acc))
+                begin = time()
 
-    def predict_proba(self, X, batch_size=32):
+    def predict_proba(self, X, batch_size: int = 32):
         Yhat = []
         for batch in self._generate_batches(X, batch_size):
             batch_yhat = []
@@ -148,10 +151,10 @@ class ForwardForwardClassifier:
             Yhat.append(np.hstack(batch_yhat))
         return np.vstack(Yhat)
                 
-    def predict(self, X, batch_size=32):
+    def predict(self, X, batch_size: int = 32):
         return np.argmax(self.predict_proba(X, batch_size), -1)
 
-    def _generate_batches(self, X, batch_size=32):
+    def _generate_batches(self, X, batch_size: int = 32):
         batch = []
         for sample in X:
             batch.append(sample)
