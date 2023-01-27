@@ -1,18 +1,17 @@
 import random
 import numpy as np
-from numpy.typing import NDArray
 
 
 def sigmoid(x):
     return 1.0 / (1.0 + np.exp(-x))
 
-def norm(x: NDArray, p: int = 2, dim: int = -1, keepdims: bool = True):
+def norm(x, p=2, dim=-1, keepdims=True):
     return (x ** p).sum(axis=dim, keepdims=keepdims)
 
 
 class FullyConnected:
     
-    def __init__(self, in_dim: int, out_dim: int, do_norm: bool = True, constant: float = 1.0):
+    def __init__(self, in_dim, out_dim, do_norm=True, constant=1.0):
         k = np.sqrt(1.0 / in_dim)
         self._W = np.random.uniform(-k, k, (in_dim, out_dim))
         self._b = np.random.uniform(-k, k, out_dim)
@@ -34,7 +33,7 @@ class FullyConnected:
     def __call__(self, X):
         return self.forward(X)
 
-    def _normalize(self, X):
+    def _normalize(self, X, epsilon=1e-9):
         """
         normalize the inputs from previous layers
         Math: X / ||X||_2
@@ -42,7 +41,7 @@ class FullyConnected:
                hidden vector before using it as input to the
                next layer.``
         """
-        return X / (1e-9 + norm(X, keepdims=True) ** 0.5)
+        return X / (epsilon + norm(X, keepdims=True) ** 0.5)
 
     def goodness(self, H):
         """
@@ -74,7 +73,7 @@ class FullyConnected:
         self._backward(X, h)
         return h
 
-    def update(self, is_positive: bool, learning_rate: float):
+    def update(self, is_positive, learning_rate):
         assert isinstance(is_positive, bool)
         sign = 1.0 if is_positive else -1.0
         self._W += sign * learning_rate * self._gradW / self._samples
@@ -86,7 +85,7 @@ class ForwardForwardClassifier:
     
     name = "ForwardForwardNetwork"
     
-    def __init__(self, in_dim: int, hide_dim: int, out_dim: int, n_layers: int = 2):
+    def __init__(self, in_dim, hide_dim, out_dim, n_layers=2):
         assert n_layers >= 1
         self._dims = (in_dim, hide_dim, out_dim)
         self.layers = [FullyConnected(in_dim + out_dim, hide_dim, False)]
@@ -98,7 +97,7 @@ class ForwardForwardClassifier:
             X = layer(X)
         return layer.goodness(X)
 
-    def train_step(self, positive, negative, learning_rate: float, n_iters=5):
+    def train_step(self, positive, negative, learning_rate, n_iters=5):
         for layer in self.layers:
             for niter in range(n_iters):
                 layer(positive)
@@ -108,7 +107,7 @@ class ForwardForwardClassifier:
             positive = layer(positive)
             negative = layer(negative)
 
-    def fit(self, X, Y, learn_rate: float = 5e-4, batch_size: int = 32, epochs: int = 10000, log_freq: int = 1000):
+    def fit(self, X, Y, learn_rate=5e-4, batch_size=32, epochs=10000, log_freq=1000):
         from time import time
         from sklearn.metrics import accuracy_score
         Y = Y.astype(np.int32)
@@ -139,7 +138,7 @@ class ForwardForwardClassifier:
                 print("Epoch-%d | Spent=%.4f | Train Accuracy=%.4f" % (epoch, time() - begin, acc))
                 begin = time()
 
-    def predict_proba(self, X, batch_size: int = 32):
+    def predict_proba(self, X, batch_size=32):
         Yhat = []
         for batch in self._generate_batches(X, batch_size):
             batch_yhat = []
@@ -151,10 +150,10 @@ class ForwardForwardClassifier:
             Yhat.append(np.hstack(batch_yhat))
         return np.vstack(Yhat)
                 
-    def predict(self, X, batch_size: int = 32):
+    def predict(self, X, batch_size=32):
         return np.argmax(self.predict_proba(X, batch_size), -1)
 
-    def _generate_batches(self, X, batch_size: int = 32):
+    def _generate_batches(self, X, batch_size=32):
         batch = []
         for sample in X:
             batch.append(sample)
