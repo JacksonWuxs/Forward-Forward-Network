@@ -129,7 +129,7 @@ class ForwardForwardClassifier:
                     fake_y[range(len(batch)), random.choices(subY, k=len(batch))] = 1
                     self.train_step(positive=np.hstack([batch, real_y]),
                                     negative=np.hstack([batch, fake_y]),
-                                    learn_rate=learn_rate)
+                                    learning_rate=learn_rate)
 
             self.training = False
             Yhat = self.predict(X, batch_size)
